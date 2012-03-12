@@ -1,0 +1,20 @@
+package Pod::XML;
+
+use strict;
+use warnings;
+use vars qw(@ISA $VERSION);
+
+use Pod::Parser;
+
+@ISA = ( 'Pod::Parser' );
+
+$VERSION = '0.01';
+
+sub command {
+    my ($self,$command) = @_;
+
+warn $command;
+}
+
+
+1;

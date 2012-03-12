@@ -1,0 +1,16 @@
+package Pod::Asciidoc::Format;
+
+use strict;
+use warnings;
+
+sub new {
+    my ($class,%args) = @_;
+    bless \%args,$class;
+}
+
+sub heading {
+    
+}
+
+1;
+
