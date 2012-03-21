@@ -1,0 +1,7 @@
+Build.PL
+lib/Pod/Asciidoc.pm
+lib/Pod/Asciidoc/Format.pm
+MANIFEST			This list of files
+README
+t/00-load.t
+t/01_pod-asciidoc-pod.t
