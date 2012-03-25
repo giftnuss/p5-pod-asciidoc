@@ -18,8 +18,9 @@ $VERSION = '0.01';
     head4 => sub { $_[0]->asciidoc->heading(5,\@_) },
     for => sub { },
     begin => sub { },
-    item => sub { },
-    over => sub { },
+    back => sub { shift->end_list(@_) },
+    item => sub { shift->list_item(@_) },
+    over => sub { shift->start_list(@_) },
     B => sub { $_[0]->asciidoc->bold(\@_) },
     C => sub { $_[0]->asciidoc->code(\@_) },
     L => sub { $_[0]->asciidoc->anchor(\@_) },
@@ -50,19 +51,24 @@ sub initialize {
     }
 }
 
-sub command {
-    my ($self,$command,$text,$linenum,$podpara) = @_;
-    $self->end_block;
+{
 
-    my @result;
-    if(exists $convert{$command}) {
-        @result = $convert{$command}->($self,$text,$podpara);
-    }
-    my $out = $self->output_handle();
-    print $out @result;
+    sub command {
+        my ($self,$command,$text,$linenum,$podpara) = @_;
+        return if $command eq 'pod';
+
+        $self->end_block;
+
+        my @result;
+        $text = $self->interpolate($text,$linenum);
+        if(exists $convert{$command}) {
+            @result = $convert{$command}->($self,$text,$podpara);
+        }
+        my $out = $self->output_handle();
+        print $out @result;
 }
 
-{
+
     my $in_verbatim = 0;
     sub verbatim {
         my ($self,$block,$linenum) = @_;
@@ -99,6 +105,7 @@ sub command {
         my ($self,$text,$line_num,$pod_para) = @_;
 
         my @result;
+        $self->interpolate($text,$line_num);
         if(exists $convert{'textblock'}) {
             push @result, $convert{'textblock'}->($self,$text,$pod_para);
         }
@@ -109,15 +116,42 @@ sub command {
         my $out = $self->output_handle();
         print $out @result;
     }
+
+    my $listlevel = 0;
+    sub start_list {
+
+        my ($self,@args) = @_;
+        $listlevel++;
+
+        #Dumper(\@args);
+
+        ''
+    }
+
+    sub list_item {
+        my ($self,$text,$paragraph) = @_;
+        $text = $self->interpolate($text);
+        return $self->asciidoc->item($listlevel,$text);
+    }
+
+    sub end_list {
+        my ($self,@args) = @_;
+        $listlevel--;
+
+        #Dumper(\@args);
+        ''
+    }
 };
 
-sub interior_sequenz {
+sub interior_sequence {
     my ($self,$cmd,$text) = @_;
     if(exists $convert{$cmd}) {
-        return $convert{$cmd}->($cmd,$text);
+        return $convert{$cmd}->($self,$text);
     }
     return $text;
 }
+
+use Data::Dumper;
 
 1;
 
@@ -149,5 +183,23 @@ object. This object provides finer control over the formating. This way
 it is  easy to override maybe local some parts of the general conversion
 process.
 
+=head2 Constructor
+
+During construction you can set your own formatting object.
+
+    my $format = Pod::Asciidoc::Format->new(headings => [qw/+ = - ~ ^ "/]);
+    my $parser = Pod::Asciidoc->new(asciidoc => $format);
+
+=head2 Defined Pod Formatting Keys
+
+=over 4
+
+=item C<head1>, C<head2>, C<head3> and C<head4>
+
+=item C<start_verbatim>, C<verbatim> and C<end_verbatim>
+
+=item C<B> and C<C>
+
+=back
 
 

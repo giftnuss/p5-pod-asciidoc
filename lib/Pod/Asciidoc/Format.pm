@@ -9,12 +9,14 @@ sub new {
     $args{'newline'} ||= "\n";
     $args{'headings'} ||= [qw(= - ~ ^ * +)];
     $args{'code_block'} ||= ('-' x 60);
+    $args{'list_char'} ||= '*';
     bless \%args,$class;
 }
 
 sub newline { $_[0]->{'newline'} }
 sub headings { $_[0]->{'headings'} }
 sub code_block { $_[0]->{'code_block'} }
+sub list_char { $_[0]->{'list_char'} }
 
 sub heading {
     my ($self,$num,$args) = @_;
@@ -38,6 +40,12 @@ sub verbatim {
 sub end_verbatim {
     my ($self,$args) = @_;
     return ($self->code_block, $self->newline, $self->newline)
+}
+
+sub item {
+    my ($self,$level,$text) = @_;
+    $text =~ s/\s*$//;
+    return ($self->list_char x $level, " ", $text, $self->newline x 2);
 }
 
 sub bold {
